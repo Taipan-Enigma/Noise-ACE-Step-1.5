@@ -602,6 +602,14 @@ class MLXDiTDecoder(nn.Module):
         # De-patchify: [B, T//patch, D] -> [B, T, out_channels]
         hidden_states = self.proj_out(hidden_states)
 
+        #inject random noise after norm + proj_out
+        ADD_NOISE = False
+        if ADD_NOISE:
+            std = mx.std(hidden_states)
+            print(f"----ADDING MLX NOISE (hidden_states std: {std.item():.4f})----")
+            noise = mx.random.normal(hidden_states.shape) * (std * 1.7)
+            hidden_states = hidden_states + noise
+
         # Crop back to original sequence length
         hidden_states = hidden_states[:, :original_seq_len, :]
 

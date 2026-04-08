@@ -1497,6 +1497,14 @@ class AceStepDiTModel(AceStepPreTrainedModel):
         # Project output: de-patchify back to original sequence format
         hidden_states = self.proj_out(hidden_states)
 
+        #inject random noise after norm + proj_out
+        ADD_NOISE = False
+        if ADD_NOISE:
+            std = hidden_states.std()
+            print(f"----ADDING NOISE (hidden_states std: {std.item():.4f})----")
+            noise = torch.randn(hidden_states.shape, device=hidden_states.device, dtype=hidden_states.dtype) * (std * 1.7)
+            hidden_states = hidden_states + noise
+
         # Crop back to original sequence length to ensure exact length match (remove padding)
         hidden_states = hidden_states[:, :original_seq_len, :]
 

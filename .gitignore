@@ -1,3 +1,6 @@
+# Exploratory stuff 
+merzbow/
+
 #Exclude potential (c) training data
 *_lyrics.txt
 *.mp3

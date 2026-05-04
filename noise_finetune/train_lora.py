@@ -176,7 +176,12 @@ def main():
             lr_scheduler_type="cosine",
             warmup_ratio=args.warmup_ratio,
             logging_steps=5,
-            eval_strategy="epoch",
+            # Mid-training eval disabled: accelerate force-converts eval logits to
+            # fp32 (vs bf16 in training), which OOMs on long Planner samples
+            # (~8700 codes × ~200K vocab × 4 bytes = ~7GB just for logits, before
+            # cross-entropy intermediates). Verify on held-out tracks manually
+            # after training instead — see RUNPOD_TRAINING.md "Verification".
+            eval_strategy="no",
             save_strategy="epoch",
             save_total_limit=3,
             bf16=torch.cuda.is_available(),

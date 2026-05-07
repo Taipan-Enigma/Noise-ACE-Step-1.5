@@ -6,7 +6,7 @@ in-distribution prompt (harsh noise) and an out-of-distribution prompt
 
 Usage:
     python noise_finetune/inference_compare.py \\
-        --lora-path lora_output/merzbow/checkpoint-final
+        --lora-path lora_output/merzbow/final
 
     # Baseline without LoRA (same prompts/seeds, base turbo only)
     python noise_finetune/inference_compare.py --no-lora \\
@@ -108,7 +108,7 @@ def generate_one(handler: AceStepHandler, label: str, prompt: dict, out_dir: Pat
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--lora-path", default="lora_output/merzbow/checkpoint-final",
+    ap.add_argument("--lora-path", default="lora_output/merzbow/final",
                     help="Path to LoRA adapter dir (PEFT format). Ignored with --no-lora.")
     ap.add_argument("--output-dir", default="noise_finetune/inference_output",
                     help="Where to write the .wav files")

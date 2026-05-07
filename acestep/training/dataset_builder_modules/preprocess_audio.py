@@ -1,21 +1,31 @@
-import torchaudio
+import numpy as np
+import torch
 
 
 def load_audio_stereo(audio_path: str, target_sample_rate: int, max_duration: float):
-    """Load audio, resample, convert to stereo, and truncate."""
-    audio, sr = torchaudio.load(audio_path)
+    """Load audio, resample, convert to stereo, and truncate.
 
-    if sr != target_sample_rate:
-        resampler = torchaudio.transforms.Resample(sr, target_sample_rate)
-        audio = resampler(audio)
+    Uses librosa (FFmpeg under the hood) instead of torchaudio.load to avoid
+    torchcodec's CUDA-version coupling — torchcodec wheels link against a
+    specific CUDA major (e.g. 13) and dlopen libnvrtc/libnppi at runtime,
+    which fails whenever the installed torch is on a different CUDA build
+    (e.g. cu128). Librosa just shells out to FFmpeg and returns numpy.
+    """
+    import librosa  # imported lazily so non-preprocess code paths don't pay the cost
 
-    if audio.shape[0] == 1:
-        audio = audio.repeat(2, 1)
-    elif audio.shape[0] > 2:
-        audio = audio[:2, :]
+    audio_np, _sr = librosa.load(
+        audio_path,
+        sr=target_sample_rate,
+        mono=False,
+        duration=max_duration,
+    )
 
-    max_samples = int(max_duration * target_sample_rate)
-    if audio.shape[1] > max_samples:
-        audio = audio[:, :max_samples]
+    if audio_np.ndim == 1:
+        audio_np = np.stack([audio_np, audio_np], axis=0)
+    elif audio_np.shape[0] == 1:
+        audio_np = np.repeat(audio_np, 2, axis=0)
+    elif audio_np.shape[0] > 2:
+        audio_np = audio_np[:2, :]
 
-    return audio, sr
+    audio = torch.from_numpy(audio_np).float()
+    return audio, target_sample_rate
